@@ -1,11 +1,7 @@
-import React, { SyntheticEvent, Component } from "react";
-import { Query } from "react-apollo";
+import React, { SyntheticEvent, Component, useState } from "react";
+import { Query, useQuery, useLazyQuery } from "react-apollo";
 import { GetAllQuery } from "./queries/GetAllQuery";
 import "./DataList.css";
-
-interface DataState {
- 
-}
 
 export interface Stats {
   total_cases: number;
@@ -21,63 +17,58 @@ interface Data {
   getNews: News;
 }
 
+// type DataState = {
+//   displayData: Data[];
+// }
+
 const DataList = () => {
+  // let getInitialState = function() {
+  //   var initialDisplayData = localStorage.getItem( 'displayData' ) || [];
 
-  let displayData: JSX.Element[] = [];
+  //   return initialDisplayData;
+  // }
 
-  let getInitialState = function() {
-    var initialDisplayData = localStorage.getItem( 'displayData' ) || [];
+  // let persistData = function(_data: any) {
+  //     localStorage.setItem( 'displayData', _data );
+  // }
 
-    return initialDisplayData;
+  let ddata : Data[] = [];
+  const [displayData, setDisplayData] = useState(ddata);
+
+  const { loading, error, data } = useQuery(GetAllQuery);
+  if(loading) {
+    return (<div>Loading...</div>);
   }
+  if(error || !data) {
+    return (<div>Error...</div>);
+  }
+  displayData.push(data);
 
-  let persistData = function(_data: any) {
-      localStorage.setItem( 'displayData', _data );
+  const UpdateData = () => {
+    const [lazy, {loading, data} ] = useLazyQuery(GetAllQuery);
+    displayData.push(data);
+
+    setDisplayData(displayData);
   }
 
   return (
-    <div className="DataList">
-      <h2>NY Covid Data</h2>
-
-      <button onClick={() => {
-         displayData.push(
-          <p>
-            <b>Total Cases:</b>
-            <br></br>
-            <b>Date:</b> 
-            <br></br>
-            <b>News:</b>
-          </p>);
-        }}>
-        Update
-      </button>
-
-      <Query<Data> query={GetAllQuery}>
-        {({ loading, error, data }) => {
-          if (loading) return (<div>Loading...</div>);
-          if (error || !data) return (<div>Error...</div>);
-
-          console.log(displayData);
-
-          {
-            displayData.push(
-              <p>
-                <b>Total Cases:</b> {data.getStats.total_cases  }
-                <br></br>
-                <b>Date:</b> {data.getStats.date  }
-                <br></br>
-                <b>News:</b> {data.getNews.notes  }
-              </p>
-            )
-          };
-
-          return (
-            <div id="display-data-container">
-              {displayData}
-            </div>
-          );
-        }}
-      </Query>
+    <div>
+        <table>
+            <tr>
+              <th>Cases</th>
+              <th>Date</th>
+              <th>Notes</th>
+            </tr>
+            {displayData.map((r) => (
+              
+              <tr>
+                <td>{r.getStats.total_cases}</td>
+                <td>{r.getStats.date}</td>
+                <td>{r.getNews.notes}</td>
+              </tr>
+            ))}
+        </table>
+        <button id="updateBtn" onClick={() => UpdateData()}>Update</button>
     </div>
   );
 };
