@@ -1,0 +1,9 @@
+.DataList ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.DataList li {
+  display: block;
+  margin-bottom: 0.5em;
+}
