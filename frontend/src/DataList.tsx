@@ -1,5 +1,5 @@
-import React, { SyntheticEvent, Component, useState } from "react";
-import { Query, useQuery, useLazyQuery } from "react-apollo";
+import React, { useState, useCallback } from "react";
+import { useQuery } from "react-apollo";
 import { GetAllQuery } from "./queries/GetAllQuery";
 import "./DataList.css";
 
@@ -17,10 +17,6 @@ interface Data {
   getNews: News;
 }
 
-// type DataState = {
-//   displayData: Data[];
-// }
-
 const DataList = () => {
   // let getInitialState = function() {
   //   var initialDisplayData = localStorage.getItem( 'displayData' ) || [];
@@ -35,40 +31,48 @@ const DataList = () => {
   let ddata : Data[] = [];
   const [displayData, setDisplayData] = useState(ddata);
 
-  const { loading, error, data } = useQuery(GetAllQuery);
+  const { loading, error, data , fetchMore } = useQuery(GetAllQuery);
+
+  const fetchReq = async () => {
+    fetchMore({
+      updateQuery: (prev, { fetchMoreResult }) => {
+        console.log(fetchMoreResult);
+        setDisplayData(oldArray => [...oldArray, fetchMoreResult]);
+      }
+    });
+  }
+
   if(loading) {
     return (<div>Loading...</div>);
   }
   if(error || !data) {
     return (<div>Error...</div>);
   }
-  displayData.push(data);
-
-  const UpdateData = () => {
-    const [lazy, {loading, data} ] = useLazyQuery(GetAllQuery);
+  if(displayData.length == 0) { // Initial load
     displayData.push(data);
-
-    setDisplayData(displayData);
   }
 
   return (
     <div>
         <table>
-            <tr>
-              <th>Cases</th>
-              <th>Date</th>
-              <th>Notes</th>
-            </tr>
-            {displayData.map((r) => (
-              
+            <thead>
               <tr>
-                <td>{r.getStats.total_cases}</td>
-                <td>{r.getStats.date}</td>
-                <td>{r.getNews.notes}</td>
+                <th> Cases</th>
+                <th> Date </th>
+                <th> Notes </th>
               </tr>
-            ))}
+            </thead>
+            <tbody>
+              {displayData.map((r, i) => (
+                <tr key={i}>
+                  <td>{r.getStats.total_cases}</td>
+                  <td>{r.getStats.date}</td>
+                  <td>{r.getNews.notes}</td>
+                </tr>
+              ))}
+            </tbody>
         </table>
-        <button id="updateBtn" onClick={() => UpdateData()}>Update</button>
+        <button id="updateBtn" onClick={fetchReq}>Update</button>
     </div>
   );
 };

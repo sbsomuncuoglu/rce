@@ -6,7 +6,16 @@ import * as serviceWorker from './serviceWorker';
 import ApolloClient from "apollo-boost";
 import { ApolloProvider } from "react-apollo";
 
-const client = new ApolloClient({ uri: "http://localhost:4000" });
+const client = new ApolloClient(
+  {
+    uri: "http://localhost:4000",
+    defaultOptions: {
+      watchQuery: {
+        fetchPolicy: 'cache-and-network',
+      },
+    }
+  }
+);
 
 ReactDOM.render(
   <ApolloProvider client={client}>
